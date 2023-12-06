@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drag and Drop List</title>
+    <!--Google Fonts and Icons-->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp|Material+Icons+Two+Tone"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        background: rgb(214, 104, 103);
+      }
+      .center {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .searchContainer {
+        margin-bottom: 10px;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+      }
+      
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+      }
+      
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      
+      .container {
+        margin-top: 20px;
+      }
+      #searchInput {
+        width: 300px;
+        height: 30px;
+        padding: 5px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        box-sizing: border-box;
+      }
+      .removedItemsContainer {
+        margin-top: 20px;
+      }
+    
+      #removedItemsList {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    
+      #removedItemsList .item {
+        width: 150px;
+        height: 40px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffcccb;
+        border-radius: 3mm;
+        margin: 5px;
+        box-shadow: rgba(0, 0, 0, 0.19) 0px 5px 10px, rgba(0, 0, 0, 0.23) 0px 3px 3px;
+        opacity: 0;
+        animation: fadein 0.5s forwards;
+      }
+    
+      @keyframes fadein {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .item {
+        width: 350px;
+        height: 60px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: white;
+        border-radius: 3mm;
+        margin: 10px 0;
+        cursor: grab;
+        box-shadow: rgba(0, 0, 0, 0.19) 0px 5px 10px,
+          rgba(0, 0, 0, 0.23) 0px 3px 3px;
+        transition: margin 0.25s;
+      }
+      .name {
+        width: 100%;
+        text-align: center;
+        font-family: poppins;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .item span {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translate(0, -50%);
+        font-size: 30px;
+        color: rgb(180, 180, 180);
+      }
+      .item.dragging {
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0) scale(1.15);
+        pointer-events: none;
+        z-index: 1000;
+      }
+      .insert-animation {
+        animation: scaleit 0.1s ease-in-out;
+      }
+      @keyframes scaleit {
+        from {
+          transform: translate(-50%, 0) scale(1);
+        }
+      }
+      .item.dragging .name {
+        color: rgb(218, 83, 80);
+      }
+      .item.dragging span {
+        color: rgb(214, 104, 103);
+      }
+    </style>
+  </head>
+  <body>
+ <div class="center">
+        
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Adicionar Novo Item</h2>
+      <input type="text" id="newItemName" placeholder="Nome do Novo Item">
+      <button id="addItemButton">Adicionar Item</button>
+      <button id="cancelButton">Cancelar</button>
+    </div>
+  </div>
+      <div class="container">        
+        <div class="searchContainer">
+            <input type="text" id="searchInput" placeholder="Buscar Nome do Item" />
+        </div>
+        <button id="openModalButton">Abrir Modal</button>
+        <div class="addItemContainer">  
+        </div>
+        <div class="item" draggable="true" ondragstart="drag(event)">
+          <div class="name">Item 1</div>
+          <span class="material-icons-round">drag_indicator</span>
+        </div>
+        <div class="item">
+          <div class="name">Item 2</div>
+          <span class="material-icons-round">drag_indicator</span>
+        </div>
+        <div class="item">
+          <div class="name">Item 3</div>
+          <span class="material-icons-round">drag_indicator</span>
+        </div>
+        <div class="item">
+          <div class="name">Item 4</div>
+          <span class="material-icons-round">drag_indicator</span>
+        </div>
+      </div>
+ 
+    </div>
+     <div class="removedItemsContainer">
+        <h2>remove item</h2>
+        <div id="removedItemsList"></div>
+      </div>
+    </div>
+    <div class="modal" id="removeModal">
+        <div class="modal-content">
+          <h2>Remover Item</h2>
+          <p>Deseja realmente remover este item?</p>
+          <button id="confirmRemoveButton">Confirmar</button>
+          <button id="cancelRemoveButton">Cancelar</button>
+        </div>
+      </div>
+    <script>
+        function setupDragAndDrop() {
+            let isDragging = false;
+            let currentItem = null;
+            let containerOffsetY = 0;
+            let initY = 0;
+    
+            const container = document.querySelector(".container");
+            container.style.width = container.offsetWidth + "px";
+            container.style.height = container.offsetHeight + "px";
+    
+            document.addEventListener("mousedown", handleMouseDown);
+            document.addEventListener("mousemove", handleMouseMove);
+            document.addEventListener("mouseup", handleMouseUp);
+    
+            function handleMouseDown(e) {
+              const item = e.target.closest(".item");
+              if (item) {
+                isDragging = true;
+                currentItem = item;
+                containerOffsetY = currentItem.offsetTop;
+                currentItem.classList.add("dragging");
+                document.body.style.userSelect = "none";
+                currentItem.classList.add("insert-animation");
+                currentItem.style.top = containerOffsetY + "px";
+                initY = e.clientY;
+              }
+            }
+    
+            function handleMouseMove(e) {
+              if (isDragging && currentItem) {
+                currentItem.classList.remove("insert-animation");
+                let newTop = containerOffsetY - (initY - e.clientY);
+                if (newTop < -50) {
+                  newTop = -50;
+                } else if (newTop > container.offsetHeight - 30) {
+                  newTop = container.offsetHeight - 30;
+                }
+                currentItem.style.top = newTop + "px";
+    
+                let itemSibilings = [
+                  ...document.querySelectorAll(".item:not(.dragging)"),
+                ];
+                let nextItem = itemSibilings.find((sibling) => {
+                  return (
+                    e.clientY - container.getBoundingClientRect().top <=
+                    sibling.offsetTop + sibling.offsetHeight / 2
+                  );
+                });
+    
+                itemSibilings.forEach((sibling) => {
+                  sibling.style.marginTop = "10px";
+                });
+    
+                if (nextItem) {
+                  nextItem.style.marginTop = currentItem.offsetHeight + 20 + "px";
+                }
+                container.insertBefore(currentItem, nextItem);
+    
+                // Verifica se o item está fora da área da lista
+                if (
+                  e.clientY < container.getBoundingClientRect().top ||
+                  e.clientY > container.getBoundingClientRect().bottom
+                ) {
+                  // Remove o item da lista
+                  container.removeChild(currentItem);
+                  currentItem = null;
+                  isDragging = false;
+                  document.body.style.userSelect = "auto";
+                }
+              }
+            }
+    
+            function handleMouseUp() {
+              if (currentItem) {
+                currentItem.classList.remove("dragging");
+                currentItem.style.top = "auto";
+                currentItem = null;
+                isDragging = false;
+    
+                document.body.style.userSelect = "auto";
+              }
+    
+              let itemSibilings = [
+                ...document.querySelectorAll(".item:not(.dragging)"),
+              ];
+    
+              itemSibilings.forEach((sibling) => {
+                sibling.style.marginTop = "10px";
+              });
+            }
+          }
+    
+          function setupSearch() {
+            const searchInput = document.getElementById("searchInput");
+            searchInput.addEventListener("input", filterItems);
+    
+            function filterItems() {
+              const filter = searchInput.value.toLowerCase();
+    
+              const items = document.querySelectorAll('.item');
+              items.forEach(item => {
+                const itemName = item.querySelector('.name').textContent.toLowerCase();
+                const displayStyle = itemName.includes(filter) ? 'flex' : 'none';
+                item.style.display = displayStyle;
+              });
+            }
+          }
+    
+          function setupModal() {
+            const openModalButton = document.getElementById('openModalButton');
+            const modal = document.getElementById('myModal');
+            const closeButton = document.getElementsByClassName('close')[0];
+            const cancelButton = document.getElementById('cancelButton');
+            const addItemButton = document.getElementById('addItemButton');
+            const newItemNameInput = document.getElementById('newItemName');
+            const container = document.querySelector('.container');
+    
+            openModalButton.addEventListener('click', function () {
+              modal.style.display = 'block';
+            });
+    
+            closeButton.addEventListener('click', function () {
+              modal.style.display = 'none';
+            });
+    
+            cancelButton.addEventListener('click', function () {
+              modal.style.display = 'none';
+            });
+    
+            window.addEventListener('click', function (event) {
+              if (event.target === modal) {
+                modal.style.display = 'none';
+              }
+            });
+    
+            addItemButton.addEventListener('click', function () {
+              const newItemName = newItemNameInput.value.trim();
+    
+              if (newItemName !== "") {
+                const newItem = document.createElement('div');
+                newItem.classList.add('item');
+                newItem.innerHTML = `
+                  <div class="name">${newItemName}</div>
+                  <span class="material-icons-round">drag_indicator</span>
+                `;
+    
+                container.appendChild(newItem);
+                modal.style.display = 'none';
+                newItemNameInput.value = '';
+              }
+            });
+          }
+    
+          function removeItem() {
+            const removeModal = document.getElementById('removeModal');
+            const confirmRemoveButton = document.getElementById('confirmRemoveButton');
+            const cancelRemoveButton = document.getElementById('cancelRemoveButton');
+    
+            confirmRemoveButton.addEventListener('click', () => {
+              if (currentItem) {
+                currentItem.classList.remove("dragging");
+                currentItem.style.top = "auto";
+                const container = document.querySelector(".container");
+                container.removeChild(currentItem);
+                currentItem = null;
+                isDragging = false;
+                document.body.style.userSelect = "auto";
+              }
+    
+              let itemSiblings = [...document.querySelectorAll(".item:not(.dragging)")];
+    
+              itemSiblings.forEach((sibling) => {
+                sibling.style.marginTop = "10px";
+              });
+    
+              removeModal.style.display = 'none';
+            });
+    
+            cancelRemoveButton.addEventListener('click', () => {
+              removeModal.style.display = 'none';
+            });
+    
+            document.addEventListener("mouseup", (e) => {
+              if (currentItem) {
+                // Verifica se o clique foi fora do modal de remoção
+                if (!removeModal.contains(e.target)) {
+                  removeModal.style.display = 'block';
+                }
+              }
+            });
+          }
+    
+          document.addEventListener("DOMContentLoaded", function () {
+            setupSearch();
+            setupModal();
+            setupDragAndDrop();
+            removeItem();
+          });
+    </script>
+  </body>
+</html>
